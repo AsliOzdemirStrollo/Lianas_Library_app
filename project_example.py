@@ -9,6 +9,33 @@ from update_and_delete import update_member, delete_member, delete_book
 
 # import other modules and your existing UI code functions
 
+# log in 
+import streamlit as st
+
+# Get login credentials from Streamlit secrets
+valid_username = st.secrets["APP_USERNAME"]
+valid_password = st.secrets["APP_PASSWORD"]
+
+# Session state to track login
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+# If not logged in, show login form
+if not st.session_state.logged_in:
+    st.title("Library Admin Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        if username == valid_username and password == valid_password:
+            st.session_state.logged_in = True
+            st.experimental_rerun()  # Refresh page after login
+        else:
+            st.error("Invalid username or password.")
+
+# If logged in, show the app
+if st.session_state.logged_in:
+    st.success(f"Welcome, {valid_username}!")
+    # 👇 Place the rest of your app code below this line
 
 # ================== PAGE CONFIG & STYLES ==================
 st.set_page_config(page_title="Liana's Library", layout="wide")
