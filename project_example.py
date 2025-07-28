@@ -13,6 +13,20 @@ import streamlit as st
 # ... other imports
 
 # --- LOGIN CODE ---
+import streamlit as st
+
+#for log in form
+# --- CSS to fix input colors ---
+st.markdown("""
+<style>
+input[type="text"], input[type="password"] {
+    background-color: white !important;
+    color: black !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --- LOGIN CODE ---
 valid_username = st.secrets["APP_USERNAME"]
 valid_password = st.secrets["APP_PASSWORD"]
 
@@ -21,7 +35,7 @@ if "logged_in" not in st.session_state:
 
 if not st.session_state.logged_in:
     st.title("Library Admin Login")
-    username = st.text_input("Username")
+    username = st.text_input("Username", placeholder="")
     password = st.text_input("Password", type="password", placeholder="")
 
     login_clicked = st.button("Login")
@@ -33,8 +47,10 @@ if not st.session_state.logged_in:
         else:
             st.error("Invalid username or password.")
 
-else:
+if st.session_state.logged_in:
+    # --- Place your full app UI code below this line ---
     st.success(f"Welcome, {valid_username}!")
+
 
 
 # ================== PAGE CONFIG & STYLES ==================
