@@ -19,12 +19,13 @@ def login_page():
     login_clicked = st.button("Login")
 
     if login_clicked:
-        if username == valid_username and password == valid_password:
-            st.session_state.logged_in = True
-            st.session_state.login_error = False
-            st.session_state.rerun_needed = True
-        else:
-            st.session_state.login_error = True
+    if username == valid_username and password == valid_password:
+        st.session_state.logged_in = True
+        st.session_state.login_error = False
+        st.stop()  # <-- replace rerun with stop here
+    else:
+        st.session_state.login_error = True
+
 
     if st.session_state.login_error:
         st.error("Invalid username or password.")
