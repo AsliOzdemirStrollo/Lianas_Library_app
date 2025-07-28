@@ -1,5 +1,6 @@
 import streamlit as st
-# for unable the log-in
+import library_app  # This is your actual app code, assuming it defines a main() function
+
 # import project_example  # your library app code, assumed as a module or script with a main() function
 
 # --- CSS to fix input colors ---
@@ -12,13 +13,15 @@ input[type="text"], input[type="password"] {
 </style>
 """, unsafe_allow_html=True)
 
-# --- LOGIN CODE ---
+# --- LOGIN CREDENTIALS ---
 valid_username = st.secrets["APP_USERNAME"]
 valid_password = st.secrets["APP_PASSWORD"]
 
+# --- SESSION STATE SETUP ---
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
+# --- LOGIN PAGE ---
 def login_page():
     st.title("Library Admin Login")
     username = st.text_input("Username")
@@ -28,18 +31,14 @@ def login_page():
     if login_clicked:
         if username == valid_username and password == valid_password:
             st.session_state.logged_in = True
-            st.experimental_rerun()  # Reload to show main app immediately
         else:
             st.error("Invalid username or password.")
 
+# --- MAIN APP WRAPPER ---
 def main_app():
-    # Call your actual library app code here:
-    # If your project_example.py has a function main() that runs the app:
-    project_example.main()
-    
-    # Or if not modularized, you can inline the project_example.py code here instead
+    library_app.main()  # Call your real app
 
-# Show either login page or main app based on login state
+# --- PAGE ROUTING ---
 if not st.session_state.logged_in:
     login_page()
 else:
