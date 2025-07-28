@@ -1,5 +1,5 @@
 import streamlit as st
-import library_app  # your main app, must have a main() function
+import library_app
 
 valid_username = st.secrets["APP_USERNAME"]
 valid_password = st.secrets["APP_PASSWORD"]
@@ -8,6 +8,8 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "login_error" not in st.session_state:
     st.session_state.login_error = False
+if "rerun_needed" not in st.session_state:
+    st.session_state.rerun_needed = False
 
 def login_page():
     st.title("Library Admin Login")
@@ -20,18 +22,20 @@ def login_page():
         if username == valid_username and password == valid_password:
             st.session_state.logged_in = True
             st.session_state.login_error = False
-            st.experimental_rerun()  # rerun app immediately after login success
+            st.session_state.rerun_needed = True
         else:
             st.session_state.login_error = True
 
     if st.session_state.login_error:
         st.error("Invalid username or password.")
 
-def main_app():
-    st.success(f"Welcome, {valid_username.capitalize()}!")
-    library_app.main()
-
 if not st.session_state.logged_in:
     login_page()
 else:
-    main_app()
+    st.success(f"Welcome, {valid_username.capitalize()}!")
+    library_app.main()
+
+# Outside login_page(), do the rerun check
+if st.session_state.get("rerun_needed"):
+    st.session_state.rerun_needed = False
+    st.experimental_rerun()
