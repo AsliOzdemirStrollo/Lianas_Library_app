@@ -20,7 +20,7 @@ def login_page():
         if username == valid_username and password == valid_password:
             st.session_state.logged_in = True
             st.session_state.login_error = False
-            st.stop()  # Stop execution here to refresh and show main app next run
+            st.experimental_rerun()  # <-- rerun immediately after login success
         else:
             st.session_state.login_error = True
 
