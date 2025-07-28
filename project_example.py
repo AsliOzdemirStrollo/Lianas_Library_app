@@ -1,5 +1,5 @@
 import streamlit as st
-import library_app  # your library app code, must have a `main()` function or similar
+import library_app  # your main app, must have a main() function
 
 valid_username = st.secrets["APP_USERNAME"]
 valid_password = st.secrets["APP_PASSWORD"]
@@ -11,10 +11,7 @@ if "login_error" not in st.session_state:
 
 def login_page():
     st.title("Library Admin Login")
-    
-    # Show Streamlit version here
-    st.write("Streamlit version:", st.__version__)
-    
+
     username = st.text_input("Username", key="login_username")
     password = st.text_input("Password", type="password", key="login_password")
     login_clicked = st.button("Login")
@@ -23,18 +20,16 @@ def login_page():
         if username == valid_username and password == valid_password:
             st.session_state.logged_in = True
             st.session_state.login_error = False
+            st.experimental_rerun()  # rerun app immediately after login success
         else:
             st.session_state.login_error = True
 
     if st.session_state.login_error:
         st.error("Invalid username or password.")
 
-
-
 def main_app():
     st.success(f"Welcome, {valid_username.capitalize()}!")
-    library_app.main()  # or project_example_lib.main() depending on your actual import
-
+    library_app.main()
 
 if not st.session_state.logged_in:
     login_page()
