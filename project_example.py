@@ -1,5 +1,5 @@
 import streamlit as st
-import project_example_lib  # your library app code, must have a `main()` function or similar
+import library_app  # your library app code, must have a `main()` function or similar
 
 valid_username = st.secrets["APP_USERNAME"]
 valid_password = st.secrets["APP_PASSWORD"]
