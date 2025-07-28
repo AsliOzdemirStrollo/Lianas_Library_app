@@ -12,24 +12,23 @@ if "login_error" not in st.session_state:
 def login_page():
     st.title("Library Admin Login")
     
+    # Show Streamlit version here
+    st.write("Streamlit version:", st.__version__)
+    
     username = st.text_input("Username", key="login_username")
     password = st.text_input("Password", type="password", key="login_password")
     login_clicked = st.button("Login")
 
-    # Debug info (remove later)
-    st.write(f"Username: {username}, Password: {'*' * len(password)}")
-
     if login_clicked:
-        st.write("Login button clicked!")
         if username == valid_username and password == valid_password:
             st.session_state.logged_in = True
             st.session_state.login_error = False
-            st.experimental_rerun()  # immediately rerun so UI updates
         else:
             st.session_state.login_error = True
 
     if st.session_state.login_error:
         st.error("Invalid username or password.")
+
 
 
 def main_app():
