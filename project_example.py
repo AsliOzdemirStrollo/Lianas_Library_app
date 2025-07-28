@@ -20,13 +20,12 @@ def login_page():
         if username == valid_username and password == valid_password:
             st.session_state.logged_in = True
             st.session_state.login_error = False
-            st.stop()  # <-- STOP here, do NOT call experimental_rerun()
+            st.experimental_rerun()  # immediate rerun to reflect login state
         else:
             st.session_state.login_error = True
 
     if st.session_state.login_error:
         st.error("Invalid username or password.")
-
 
 if not st.session_state.logged_in:
     login_page()
