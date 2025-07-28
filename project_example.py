@@ -8,8 +8,6 @@ if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "login_error" not in st.session_state:
     st.session_state.login_error = False
-if "rerun_needed" not in st.session_state:
-    st.session_state.rerun_needed = False
 
 def login_page():
     st.title("Library Admin Login")
@@ -19,13 +17,12 @@ def login_page():
     login_clicked = st.button("Login")
 
     if login_clicked:
-    if username == valid_username and password == valid_password:
-        st.session_state.logged_in = True
-        st.session_state.login_error = False
-        st.stop()  # <-- replace rerun with stop here
-    else:
-        st.session_state.login_error = True
-
+        if username == valid_username and password == valid_password:
+            st.session_state.logged_in = True
+            st.session_state.login_error = False
+            st.stop()  # Stop execution here to refresh and show main app next run
+        else:
+            st.session_state.login_error = True
 
     if st.session_state.login_error:
         st.error("Invalid username or password.")
@@ -35,8 +32,3 @@ if not st.session_state.logged_in:
 else:
     st.success(f"Welcome, {valid_username.capitalize()}!")
     library_app.main()
-
-# Outside login_page(), do the rerun check
-if st.session_state.get("rerun_needed"):
-    st.session_state.rerun_needed = False
-    st.experimental_rerun()
