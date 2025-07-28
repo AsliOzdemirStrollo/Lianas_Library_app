@@ -12,9 +12,6 @@ from update_and_delete import update_member, delete_member, delete_book
 import streamlit as st
 # ... other imports
 
-# --- LOGIN CODE ---
-import streamlit as st
-
 #for log in form
 # --- CSS to fix input colors ---
 st.markdown("""
@@ -35,7 +32,7 @@ if "logged_in" not in st.session_state:
 
 if not st.session_state.logged_in:
     st.title("Library Admin Login")
-    username = st.text_input("Username", placeholder="")
+    username = st.text_input("Username")
     password = st.text_input("Password", type="password", placeholder="")
 
     login_clicked = st.button("Login")
@@ -43,13 +40,13 @@ if not st.session_state.logged_in:
     if login_clicked:
         if username == valid_username and password == valid_password:
             st.session_state.logged_in = True
-            st.success(f"Welcome, {valid_username}!")
+            # Show welcome message once on successful login
+            st.success(f"Welcome, {valid_username.capitalize()}!")
         else:
             st.error("Invalid username or password.")
-
-if st.session_state.logged_in:
-    # --- Place your full app UI code below this line ---
-    st.success(f"Welcome, {valid_username}!")
+else:
+    # Show welcome only once when already logged in, no duplicates
+    st.success(f"Welcome, {valid_username.capitalize()}!")
 
 
 
