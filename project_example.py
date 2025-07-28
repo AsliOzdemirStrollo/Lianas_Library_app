@@ -1,9 +1,6 @@
 import streamlit as st
 import library_app
 
-import streamlit as st
-st.write("Streamlit version:", st.__version__)
-
 valid_username = st.secrets["APP_USERNAME"]
 valid_password = st.secrets["APP_PASSWORD"]
 
