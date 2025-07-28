@@ -9,8 +9,8 @@ if "logged_in" not in st.session_state:
 
 def login_page():
     st.title("Library Admin Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    username = st.text_input("Username", key="login_username")
+    password = st.text_input("Password", type="password", key="login_password")
     login_clicked = st.button("Login")
 
     if login_clicked:
