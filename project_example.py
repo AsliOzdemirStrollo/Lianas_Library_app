@@ -1,6 +1,8 @@
 import streamlit as st
 import library_app
 
+st.session_state.clear()  # 🔄 Reset session to force login screen
+
 # Load credentials from Streamlit secrets
 valid_username = st.secrets["APP_USERNAME"]
 valid_password = st.secrets["APP_PASSWORD"]
@@ -22,14 +24,14 @@ def login_page():
         if username == valid_username and password == valid_password:
             st.session_state.logged_in = True
             st.session_state.login_error = False
-            st.rerun()  # ✅ This ensures the main app loads right after login
+            st.experimental_rerun()  # newer API for rerun
         else:
             st.session_state.login_error = True
 
     if st.session_state.login_error:
         st.error("Invalid username or password.")
 
-# App logic
+# Main logic
 if not st.session_state.logged_in:
     login_page()
 else:
