@@ -306,3 +306,92 @@ def create_loan():
                     conn.close()
                 except:
                     pass
+
+# ------------------ RETURN LOAN ------------------
+
+def return_loan():
+    import streamlit as st
+    import read
+
+    st.markdown("### Return a Loan")
+
+    # Load all loans, filter active ones (no Return_date)
+    loans_df = read.read_loans()
+    active_loans_df = loans_df[loans_df["Return_date"].isna()]
+
+    if active_loans_df.empty:
+        st.info("No active loans to return.")
+        return
+
+    # Create a unique temporary LoanID based on row index
+    active_loans_df = active_loans_df.reset_index(drop=True)
+    active_loans_df["TempLoanID"] = active_loans_df.index
+
+    # Build display labels for each loan
+    loan_options = [
+        (
+            row["TempLoanID"],
+            f'ID {row["TempLoanID"]} - "{row["Title"]}" borrowed by {row["Member_FName"]} {row["Member_LName"]} on {row["Borrow_date"]}'
+        )
+        for _, row in active_loans_df.iterrows()
+    ]
+
+    loan_ids = [opt[0] for opt in loan_options]
+    loan_labels = [opt[1] for opt in loan_options]
+
+    # Add placeholder to the top of the dropdown
+    placeholder_option = "🔁 Select a loan to return"
+    loan_labels_with_placeholder = [placeholder_option] + loan_labels
+
+    selected_label = st.selectbox("Select loan to return:", loan_labels_with_placeholder)
+
+    if selected_label != placeholder_option:
+        selected_index = loan_labels.index(selected_label)
+        selected_temp_loan_id = loan_ids[selected_index]
+
+        if st.button("Return Selected Loan"):
+            selected_loan = active_loans_df.loc[active_loans_df["TempLoanID"] == selected_temp_loan_id].iloc[0]
+
+            member_fname = selected_loan["Member_FName"]
+            member_lname = selected_loan["Member_LName"]
+            book_title = selected_loan["Title"]
+            borrow_date = selected_loan["Borrow_date"]
+
+            # Update the loan's Return_date
+            update_return_date_in_db(member_fname, member_lname, book_title, borrow_date)
+
+            st.success(f'✅ Loan for "{book_title}" borrowed by {member_fname} {member_lname} has been returned.')
+    else:
+        st.info("Please select a loan to return.")
+
+
+def update_return_date_in_db(member_fname, member_lname, book_title, borrow_date):
+    import example_con
+    from example_con import engine
+    from sqlalchemy import text
+    import datetime
+
+    today = datetime.date.today()
+
+    query = """
+    UPDATE Loans L
+    JOIN Members M ON L.MemberID = M.MemberID
+    JOIN Books B ON L.ISBN = B.ISBN
+    SET L.Return_date = :today
+    WHERE M.Member_FName = :member_fname
+      AND M.Member_LName = :member_lname
+      AND B.Title = :book_title
+      AND L.Borrow_date = :borrow_date
+      AND L.Return_date IS NULL
+    """
+
+    with engine.connect() as conn:
+        conn.execute(text(query), {
+            "today": today,
+            "member_fname": member_fname,
+            "member_lname": member_lname,
+            "book_title": book_title,
+            "borrow_date": borrow_date
+        })
+        conn.commit()
+
