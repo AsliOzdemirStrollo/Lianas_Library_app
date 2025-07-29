@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
-from db import get_connection  # <-- Your new connection function
+from db import get_connection  # or your existing connection import
 
 import read
-from My_create import create_member, create_book, create_loan, return_loan, add_book_section
+from My_create import create_member, create_book, create_loan, return_loan
 from update_and_delete import update_member, delete_member, delete_book
+
 
 def main():
     # ================== PAGE CONFIG & STYLES ==================
@@ -188,10 +189,11 @@ def main():
 
     # ================== ACTIONS ==================
     add_funcs = {
-        "Add Member": create_member,
-        "Add Book": add_book_section,
-        "Add Loan": create_loan
+    "Add Member": create_member,
+    "Add Book": create_book,
+    "Add Loan": create_loan
     }
+
     if add_action in add_funcs:
         add_funcs[add_action]()
 
