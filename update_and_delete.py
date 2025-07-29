@@ -1,6 +1,5 @@
 import streamlit as st
-from sqlalchemy import text
-from example_con import engine
+from db import get_connection  # or from example_con import get_connection
 from datetime import date
 
 def update_member():
@@ -22,50 +21,67 @@ def update_member():
             st.warning("First name, last name, and email are required to identify the member.")
             return
 
-        with engine.begin() as conn:  # handles connection + transaction
-            result = conn.execute(text("""
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
                 SELECT MemberID FROM Members 
-                WHERE Member_FName = :fname AND Member_LName = :lname AND Email = :email
-            """), {
-                "fname": fname.strip(),
-                "lname": lname.strip(),
-                "email": email.strip()
-            })
-            member = result.fetchone()
+                WHERE Member_FName = ? AND Member_LName = ? AND Email = ?
+            """, (fname.strip(), lname.strip(), email.strip()))
+            member = cursor.fetchone()
 
             if not member:
                 st.error("Member does not exist. Please add the member first.")
+                cursor.close()
+                conn.close()
                 return
 
             if preference == "Social Media" and not social_media.strip():
                 st.warning("Social Media must be provided if selected as Preferred Contact Method.")
+                cursor.close()
+                conn.close()
                 return
 
-            update_query = text("""
+            cursor.execute("""
                 UPDATE Members SET
-                    Member_FName = :fname,
-                    Member_LName = :lname,
-                    Email = :email,
-                    Mobile = :mobile,
-                    Address = :address,
-                    Social_Media = :social,
-                    Preference = :preference,
-                    Member_Status = :status
-                WHERE MemberID = :member_id
-            """)
+                    Member_FName = ?,
+                    Member_LName = ?,
+                    Email = ?,
+                    Mobile = ?,
+                    Address = ?,
+                    Social_Media = ?,
+                    Preference = ?,
+                    Member_Status = ?
+                WHERE MemberID = ?
+            """, (
+                fname.strip(),
+                lname.strip(),
+                email.strip(),
+                mobile.strip(),
+                address.strip(),
+                social_media.strip() if social_media.strip() else "N/A",
+                preference,
+                status,
+                member[0]
+            ))
 
-            conn.execute(update_query, {
-                "fname": fname.strip(),
-                "lname": lname.strip(),
-                "email": email.strip(),
-                "mobile": mobile.strip(),
-                "address": address.strip(),
-                "social": social_media.strip() if social_media.strip() else "N/A",
-                "preference": preference,
-                "status": status,
-                "member_id": member.MemberID
-            })
+            conn.commit()
+            cursor.close()
+            conn.close()
             st.success("Member information successfully updated!")
+
+        except Exception as e:
+            st.error(f"Database error: {e}")
+            try:
+                cursor.close()
+            except:
+                pass
+            try:
+                conn.close()
+            except:
+                pass
+
 
 def delete_member():
     st.markdown("### 🗑️ Delete Member")
@@ -81,33 +97,42 @@ def delete_member():
             st.warning("Please fill in all fields.")
             return
 
-        with engine.begin() as conn:  # Changed here to engine.begin()
-            result = conn.execute(text("""
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
+
+            cursor.execute("""
                 SELECT * FROM Members 
-                WHERE Member_FName = :fname AND Member_LName = :lname AND Email = :email
-            """), {
-                "fname": fname.strip(),
-                "lname": lname.strip(),
-                "email": email.strip()
-            })
-            member = result.fetchone()
+                WHERE Member_FName = ? AND Member_LName = ? AND Email = ?
+            """, (fname.strip(), lname.strip(), email.strip()))
+            member = cursor.fetchone()
 
             if not member:
                 st.error("No matching member found.")
+                cursor.close()
+                conn.close()
                 return
 
+            cursor.execute("""
+                DELETE FROM Members 
+                WHERE Member_FName = ? AND Member_LName = ? AND Email = ?
+            """, (fname.strip(), lname.strip(), email.strip()))
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+            st.success("Member deleted successfully.")
+
+        except Exception as e:
+            st.error(f"Error deleting member: {e}")
             try:
-                conn.execute(text("""
-                    DELETE FROM Members 
-                    WHERE Member_FName = :fname AND Member_LName = :lname AND Email = :email
-                """), {
-                    "fname": fname.strip(),
-                    "lname": lname.strip(),
-                    "email": email.strip()
-                })
-                st.success("Member deleted successfully.")
-            except Exception as e:
-                st.error(f"Error deleting member: {e}")
+                cursor.close()
+            except:
+                pass
+            try:
+                conn.close()
+            except:
+                pass
 
 
 def delete_book():
@@ -123,32 +148,50 @@ def delete_book():
                 return
 
             try:
-                with engine.begin() as conn:
-                    # Find book
-                    result = conn.execute(text("SELECT * FROM Books WHERE ISBN = :isbn"), {"isbn": isbn.strip()})
-                    book = result.fetchone()
+                conn = get_connection()
+                cursor = conn.cursor()
 
-                    if not book:
-                        st.error("No book found with the provided ISBN.")
-                        st.session_state["book_to_delete"] = None
-                        return
+                cursor.execute("SELECT * FROM Books WHERE ISBN = ?", (isbn.strip(),))
+                book = cursor.fetchone()
 
-                    # Check for active loan
-                    loan_check = conn.execute(text("""
-                        SELECT * FROM Loans WHERE ISBN = :isbn AND Return_date IS NULL
-                    """), {"isbn": isbn.strip()}).fetchone()
+                if not book:
+                    st.error("No book found with the provided ISBN.")
+                    st.session_state["book_to_delete"] = None
+                    cursor.close()
+                    conn.close()
+                    return
 
-                    if loan_check:
-                        st.warning("❌ Cannot delete the book because it is currently loaned out.")
-                        st.session_state["book_to_delete"] = None
-                        return
+                cursor.execute("""
+                    SELECT * FROM Loans WHERE ISBN = ? AND Return_date IS NULL
+                """, (isbn.strip(),))
+                loan_check = cursor.fetchone()
 
-                    # Store book info in session state
-                    st.session_state["book_to_delete"] = dict(book._mapping)
+                if loan_check:
+                    st.warning("❌ Cannot delete the book because it is currently loaned out.")
+                    st.session_state["book_to_delete"] = None
+                    cursor.close()
+                    conn.close()
+                    return
+
+                # Store book info in session state (convert tuple to dict for easy access)
+                columns = [col[0] for col in cursor.description]
+                book_dict = dict(zip(columns, book))
+                st.session_state["book_to_delete"] = book_dict
+
+                cursor.close()
+                conn.close()
 
             except Exception as e:
                 st.error(f"Error finding book: {e}")
                 st.session_state["book_to_delete"] = None
+                try:
+                    cursor.close()
+                except:
+                    pass
+                try:
+                    conn.close()
+                except:
+                    pass
                 return
 
     # Outside the form — handles deletion after user confirmed
@@ -160,16 +203,27 @@ def delete_book():
         if st.button("🗑️ Confirm Deletion"):
             if confirm:
                 try:
-                    with engine.begin() as conn:
-                        conn.execute(text("DELETE FROM Books WHERE ISBN = :isbn"), {"isbn": book["ISBN"]})
-                        st.success(f"✅ Book '{book['Title']}' has been deleted.")
-                        st.session_state["book_to_delete"] = None  # Clear state
+                    conn = get_connection()
+                    cursor = conn.cursor()
+
+                    cursor.execute("DELETE FROM Books WHERE ISBN = ?", (book["ISBN"],))
+                    conn.commit()
+
+                    st.success(f"✅ Book '{book['Title']}' has been deleted.")
+                    st.session_state["book_to_delete"] = None
+
+                    cursor.close()
+                    conn.close()
+
                 except Exception as e:
                     st.error(f"Error deleting book: {e}")
+                    try:
+                        cursor.close()
+                    except:
+                        pass
+                    try:
+                        conn.close()
+                    except:
+                        pass
             else:
                 st.info("Please check the confirmation box before deletion.")
-
-
-
-
-
