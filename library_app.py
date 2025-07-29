@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
-from sqlalchemy import text
-from example_con import engine
-import read
+from db import get_connection  # <-- Added here
 
+import read
 from My_create import create_member, create_book, create_loan, return_loan, add_book_section
 from update_and_delete import update_member, delete_member, delete_book
 
@@ -268,47 +267,3 @@ def main():
         st.markdown("### 🔍 Check Book Loan Status")
         title_query = st.text_input("Enter book title:")
         if title_query:
-            books = read.read_books()
-            matched = books[books["Title"].str.contains(title_query, case=False)]
-            if matched.empty:
-                st.warning("❌ Book not found in the library.")
-            else:
-                loans = read.read_loans()
-                status_df = loans[loans["Title"].str.contains(title_query, case=False)]
-                if status_df.empty:
-                    st.success("✅ This book exists and is not currently loaned.")
-                else:
-                    latest = status_df.sort_values("Borrow_date", ascending=False).iloc[0]
-                    if pd.isna(latest["Return_date"]):
-                        st.error(f"❗ The book is currently loaned by {latest['Member_FName']} {latest['Member_LName']} on {latest['Borrow_date']}.")
-                    else:
-                        st.info("ℹ️ This book was previously loaned but has been returned.")
-
-    elif overview == "🔎 Search member":
-        st.markdown("### 🔎 Search for a Member")
-
-        fname = st.text_input("Enter Member First Name:")
-        lname = st.text_input("Enter Member Last Name:")
-
-        col1, col2 = st.columns(2)
-
-        if col1.button("Check Member Status"):
-            member = read.get_member_by_name(fname.strip(), lname.strip())
-            if not member:
-                st.warning("❌ Member not found in the system.")
-            else:
-                st.success(f"✅ Member found. Status: **{member['Member_Status']}**")
-
-        if col2.button("Show Member's Loan History"):
-            member = read.get_member_by_name(fname.strip(), lname.strip())
-            if not member:
-                st.warning("❌ Member not found in the system.")
-            else:
-                loans_df = read.get_member_loans_by_id(member["MemberID"])
-                if loans_df.empty:
-                    st.info("ℹ️ This member has no loan history.")
-                else:
-                    st.dataframe(loans_df)
-
-if __name__ == "__main__":
-    main()
