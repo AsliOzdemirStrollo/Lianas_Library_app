@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from db import get_connection  # <-- Added here
+from db import get_connection  # <-- Your new connection function
 
 import read
 from My_create import create_member, create_book, create_loan, return_loan, add_book_section
@@ -262,8 +262,51 @@ def main():
 
         st.dataframe(display_df.head(num_rows))
 
-
     elif overview == "🔍 Search book status":
         st.markdown("### 🔍 Check Book Loan Status")
         title_query = st.text_input("Enter book title:")
         if title_query:
+            # Search books by title (case-insensitive contains)
+            books_df = read.read_books()
+            matches = books_df[books_df['Title'].str.contains(title_query, case=False, na=False)]
+            if matches.empty:
+                st.info("No books found with that title.")
+            else:
+                # For each match, show book info and loan status
+                for idx, row in matches.iterrows():
+                    st.markdown(f"**Title:** {row['Title']}")
+                    st.markdown(f"Author: {row['Author_FName']} {row['Author_LName']}")
+                    st.markdown(f"Published: {row['Publication_Year']}")
+                    # Check if currently loaned out
+                    loans_df = read.read_loans()
+                    currently_loaned = loans_df[
+                        (loans_df['Book_ID'] == row['Book_ID']) & (loans_df['Return_date'].isna())
+                    ]
+                    if currently_loaned.empty:
+                        st.success("Status: Available")
+                    else:
+                        st.error("Status: Currently loaned out")
+                    st.markdown("---")
+
+    elif overview == "🔎 Search member":
+        st.markdown("### 🔎 Search Member Information")
+        member_name_query = st.text_input("Enter member first or last name:")
+        if member_name_query:
+            members_df = read.read_members()
+            matches = members_df[
+                members_df['Member_FName'].str.contains(member_name_query, case=False, na=False) |
+                members_df['Member_LName'].str.contains(member_name_query, case=False, na=False)
+            ]
+            if matches.empty:
+                st.info("No members found with that name.")
+            else:
+                display_df = matches.rename(columns={
+                    'Member_FName': 'Member First Name',
+                    'Member_LName': 'Member Last Name',
+                    'Signup_Date': 'Signup Date',
+                    'Social_Media': 'Social Media'
+                })
+                st.dataframe(display_df.head(num_rows))
+
+if __name__ == "__main__":
+    main()
