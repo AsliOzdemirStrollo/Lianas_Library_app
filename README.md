@@ -3,8 +3,6 @@
 A **Streamlit web application** to help Liana — and anyone like her — manage books, members, and loans with ease. Built using **Python**, **SQLite**, and **Streamlit**, this app enables non-technical users to keep track of a personal or community book collection.
 
 🔗 [Launch the App](https://asliozdemirstrollo-lianas-library-app-project-example-mfdbf0.streamlit.app/)  
-🔗 [GitHub Repository](https://github.com/AsliOzdemirStrollo/Lianas_Library_app)  
-👤 [Connect on LinkedIn](https://www.linkedin.com/in/asliozdemirstrollo/)
 
 ---
 
