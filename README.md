@@ -29,7 +29,7 @@ To try the app, use:
 
 ```plaintext
 Username: liana
-Password: 4321
+Password: LianaBooks_2025!
 ```
 
 ---
