@@ -1,6 +1,10 @@
 import streamlit as st
+
+# ✅ SET PAGE CONFIG FIRST — before any widgets or UI
+st.set_page_config(page_title="Liana's Library", layout="wide")
+
 import pandas as pd
-from db import get_connection  # or your existing connection import
+from db import get_connection
 
 import read
 from My_create import create_member, create_book, create_loan, return_loan
@@ -8,8 +12,6 @@ from update_and_delete import update_member, delete_member, delete_book
 
 
 def main():
-    # ================== PAGE CONFIG & STYLES ==================
-    st.set_page_config(page_title="Liana's Library", layout="wide")
 
     st.markdown("""
     <style>
